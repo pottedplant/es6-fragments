@@ -4,7 +4,7 @@ export function parse_template_literal(parts,...args) {
 	let p = new Parser();
 	
 	for(let i=0;i<parts.length;++i) {
-		p.push(parts[i]);
+		p.push(parts.raw[i]);
 		
 		if( i!==(parts.length-1) )
 			switch(p.state) {
@@ -20,6 +20,7 @@ export function parse_template_literal(parts,...args) {
 				
 			case p.states.attr_value:
 			case p.states.attr_value_sq:
+			case p.states.attr_value_dq:
 				p.ctx().node.children.push(new Node('argument',{value:args[i]}));
 				break;
 				

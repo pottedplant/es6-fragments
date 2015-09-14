@@ -71,6 +71,7 @@ export class Parser {
 			attr_eq: new State('attr_eq'),
 			attr_value: new State('attr_value'),
 			attr_value_sq: new State('attr_value_sq'),
+			attr_value_dq: new State('attr_value_dq'),
 			
 			name_begin: new State('name_begin'),
 			name: new State('name'),
@@ -157,6 +158,7 @@ export class Parser {
 		s.attr_eq.add_rule(Matchers.eq('/'),(ctx,atom)=>{ this.stack.pop(); this.stack.pop(); this.state=s.tag_open_close; });
 		
 		s.attr_eq.add_rule(Matchers.eq("'"),(ctx,atom)=>this.state=s.attr_value_sq);
+		s.attr_eq.add_rule(Matchers.eq('"'),(ctx,atom)=>this.state=s.attr_value_dq);
 		s.attr_eq.add_rule(Matchers.any(),(ctx,atom)=>{
 			ctx.node.children.push(new Node('text',{value:atom}));
 			this.state = s.attr_value;
@@ -164,7 +166,10 @@ export class Parser {
 		
 		s.attr_value_sq.add_rule(Matchers.eq("'"),(ctx,atom)=>{ this.stack.pop(); this.stack.pop(); this.state=s.tag_open; });
 		s.attr_value_sq.add_rule(Matchers.any(),(ctx,atom)=>ctx.node.children.push(new Node('text',{value:atom})));
-		
+
+		s.attr_value_dq.add_rule(Matchers.eq('"'),(ctx,atom)=>{ this.stack.pop(); this.stack.pop(); this.state=s.tag_open; });
+		s.attr_value_dq.add_rule(Matchers.any(),(ctx,atom)=>ctx.node.children.push(new Node('text',{value:atom})));
+
 		s.attr_value.add_rule(Matchers.eq(' '),(ctx,atom)=>{ this.stack.pop(); this.stack.pop(); this.state=s.tag_open; });
 		s.attr_value.add_rule(Matchers.eq('>'),(ctx,atom)=>{ this.stack.pop(); this.stack.pop(); this.state=s.text; });
 		s.attr_value.add_rule(Matchers.eq('/'),(ctx,atom)=>{ this.stack.pop(); this.stack.pop(); this.state=s.tag_open_close; });
