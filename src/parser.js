@@ -111,7 +111,7 @@ export class Parser {
 			ctx.node.attrs.name += atom;
 		});
 		
-		s.tag_open.add_rule(Matchers.eq(' '),(ctx,atom)=>null);
+		s.tag_open.add_rule(Matchers.eq(' '));
 		s.tag_open.add_rule(Matchers.eq('>'),(ctx,atom)=>this.state=s.text);
 		s.tag_open.add_rule(Matchers.eq('/'),(ctx,atom)=>this.state=s.tag_open_close);
 		
@@ -178,11 +178,12 @@ export class Parser {
 		// close tag
 		
 		let close_tag_matcher = (atom,ctx) => {
+			let current = (ctx.close_tag || '');
+			let expected = ctx.node.attrs.name;
 			switch(atom) {
-			case '>': return ctx.node.attrs.name===ctx.close_tag;
+			case '>': return expected===current;
 			default:
-				let value = (ctx.close_tag || '') + atom;
-				return ctx.node.attrs.name.indexOf(value)===0;
+				return expected && expected.indexOf(current)===0;
 			}
 		};
 		
