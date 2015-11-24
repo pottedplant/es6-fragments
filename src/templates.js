@@ -9,6 +9,12 @@ export function parse_template_literal(parts,...args) {
 		if( i!==(parts.length-1) )
 			switch(p.state) {
 			
+			case p.states.comment_text:
+			case p.states.comment_text_dash:
+			case p.states.comment_end:
+				p.ctx().node.children.push(new Node('argument',{value:args[i]}));
+				break;
+				
 			case p.states.text:
 				p.ctx().node.children.push(new Node('argument',{value:args[i]}));
 				break;

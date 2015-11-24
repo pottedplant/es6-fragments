@@ -73,6 +73,21 @@ export function build_element(node,parent,named) {
 			parent.setAttribute(name,value);
 		
 	} break;
+	
+	case 'comment': {
+		let comment = '';
+		
+		for(let i=0;i<node.children.length;++i) {
+			let child = node.children[i];
+			switch(child.type) {
+			case 'text': comment += child.attrs.value; break;
+			case 'argument': if( child.attrs.value!=null ) comment += child.attrs.value; break;
+			default: throw new Error(`unexpected node type '${values[i].type}'`);
+			}
+		}
+		
+		return document.createComment(comment);
+	} break;
 
 	default: throw new Error(`unexpected node type '${node.type}'`);
 	}

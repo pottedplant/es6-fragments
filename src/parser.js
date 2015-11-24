@@ -67,6 +67,12 @@ export class Parser {
 			tag_open: new State('tag_open'),
 			tag_open_close: new State('tag_open_close'),
 			
+			comment_start_excl: new State('comment_start_excl'),
+			comment_start_dash: new State('comment_start_dash'),
+			comment_text: new State('comment_text'),
+			comment_text_dash: new State('comment_text_dash'),
+			comment_end: new State('comment_end'),
+			
 			attr_name: new State('attr_name'),
 			attr_eq: new State('attr_eq'),
 			attr_value: new State('attr_value'),
@@ -85,8 +91,20 @@ export class Parser {
 		
 		// text
 		
+		let fn_append_text_atom = (ctx,atom) => {
+			if(ctx.node.children.length > 0) {
+				let peek = ctx.node.children[ctx.node.children.length-1];
+				if(peek.type == 'text') {
+					peek.attrs.value += atom;
+					return;
+				}
+			}
+			
+			ctx.node.children.push(new Node('text',{value:atom}));
+		};
+		
 		s.text.add_rule(Matchers.eq('<'),(ctx,atom)=>this.state=s.tag_begin);
-		s.text.add_rule(Matchers.any(),(ctx,atom)=>ctx.node.children.push(new Node('text',{value:atom})));
+		s.text.add_rule(Matchers.any(),fn_append_text_atom);
 
 		// <
 		
@@ -98,6 +116,32 @@ export class Parser {
 		});
 		
 		s.tag_begin.add_rule(Matchers.eq('/'),(ctx,atom)=>this.state=s.tag_close);
+		
+		// comment	
+		
+		s.tag_begin.add_rule(Matchers.re('!'),(ctx,atom)=>this.state=s.comment_start_excl);
+		s.comment_start_excl.add_rule(Matchers.re('-'),(ctx,atom)=>this.state=s.comment_start_dash);
+		s.comment_start_dash.add_rule(Matchers.re('-'),(ctx,atom)=>{
+			let text = new Node('comment');
+			ctx.node.children.push(text);
+			this.stack.push(new Context(text));
+			this.state=s.comment_text
+		});
+		
+		s.comment_text.add_rule(Matchers.re('[^-]'), (ctx,atom)=>{fn_append_text_atom(ctx,atom); this.state=s.comment_text;});
+		s.comment_text.add_rule(Matchers.re('-'), (ctx,atom)=>{fn_append_text_atom(ctx,atom); this.state=s.comment_text_dash;});
+		s.comment_text_dash.add_rule(Matchers.re('-'), (ctx,atom)=>{fn_append_text_atom(ctx,atom); this.state=s.comment_end;});
+		s.comment_text_dash.add_rule(Matchers.re('[^-]'), (ctx,atom)=>{fn_append_text_atom(ctx,atom); this.state=s.comment_text;});
+		s.comment_end.add_rule(Matchers.re('>'), (ctx,atom)=>{
+			let peek = ctx.node.children[ctx.node.children.length-1];
+			if(peek.type != 'text' || !peek.attrs.value.substr(-2) == '--')
+				this.parse_error('invalid parser state for template literal substitution');
+			peek.attrs.value = peek.attrs.value.substring(0, peek.attrs.value.length-2);
+			this.stack.pop();
+			this.state=s.text;
+		});
+		s.comment_end.add_rule(Matchers.re('-'), (ctx,atom)=>{fn_append_text_atom(ctx,atom); this.state=s.comment_end;});
+		s.comment_end.add_rule(Matchers.re('[^>]'), (ctx,atom)=>{fn_append_text_atom(ctx,atom); this.state=s.comment_text;});
 		
 		// open tag
 		
