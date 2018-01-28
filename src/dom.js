@@ -82,7 +82,7 @@ export function build_element(node,parent,named) {
 			switch(child.type) {
 			case 'text': comment += child.attrs.value; break;
 			case 'argument': if( child.attrs.value!=null ) comment += child.attrs.value; break;
-			default: throw new Error(`unexpected node type '${values[i].type}'`);
+			default: throw new Error(`unexpected node type '${child.type}'`);
 			}
 		}
 		
