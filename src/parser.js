@@ -108,7 +108,7 @@ export class Parser {
 
 		// <
 		
-		s.tag_begin.add_rule(Matchers.re('[a-z]'),(ctx,atom)=>{
+		s.tag_begin.add_rule(Matchers.re('[a-zA-Z]'),(ctx,atom)=>{
 			let tag = new Node('tag',{name:atom});
 			ctx.node.children.push(tag);
 			this.stack.push(new Context(tag));
@@ -151,7 +151,7 @@ export class Parser {
 
 		s.tag_open_name.add_rule(Matchers.eq(' '),(ctx,atom)=>this.state=s.tag_open);
 		
-		s.tag_open_name.add_rule(Matchers.re('[a-z0-9]'),(ctx,atom)=>{
+		s.tag_open_name.add_rule(Matchers.re('[a-zA-Z0-9]'),(ctx,atom)=>{
 			ctx.node.attrs.name += atom;
 		});
 		
@@ -176,7 +176,7 @@ export class Parser {
 		
 		// attr
 		
-		s.tag_open.add_rule(Matchers.re('[a-z]'),(ctx,atom)=>{
+		s.tag_open.add_rule(Matchers.re('[a-zA-Z]'),(ctx,atom)=>{
 			let attr = new Node('attribute',{name:atom});
 			ctx.node.children.push(attr);
 			this.stack.push(new Context(attr));
@@ -193,7 +193,7 @@ export class Parser {
 			this.state = s.attr_eq;
 		});
 		
-		s.attr_name.add_rule(Matchers.re('[a-z0-9-_]'),(ctx,atom)=>{
+		s.attr_name.add_rule(Matchers.re('[a-zA-Z0-9-_]'),(ctx,atom)=>{
 			ctx.node.attrs.name += atom;
 		});
 		

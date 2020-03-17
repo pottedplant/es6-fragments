@@ -13,7 +13,7 @@ function to_node(v) {
 	return document.createTextNode(v);
 }
 
-export function build_element(node,parent,named) {
+export function build_element(node,parent,named,ns) {
 	switch(node.type) {
 	
 	case 'text':
@@ -41,9 +41,9 @@ export function build_element(node,parent,named) {
 		break;
 	
 	case 'tag': {
-		let tag = document.createElement(node.attrs.name);
+		let tag = document.createElementNS(ns,node.attrs.name);
 		
-		let children = build_elements(node.children,tag,named);
+		let children = build_elements(node.children,tag,named,ns);
 		for(let i=0;i<children.length;++i)
 			tag.appendChild(children[i]);
 		
@@ -67,7 +67,7 @@ export function build_element(node,parent,named) {
 		}
 		
 		if( value==null ) {
-			let a = document.createAttribute(name);
+			let a = document.createAttributeNS(ns,name);
 			parent.setAttributeNode(a);
 		} else
 			parent.setAttribute(name,value);
@@ -93,11 +93,11 @@ export function build_element(node,parent,named) {
 	}
 }
 
-export function build_elements(nodes,parent,named) {
+export function build_elements(nodes,parent,named,ns) {
 	let r = [];
 	
 	for(let i=0;i<nodes.length;++i) {
-		let t = build_element(nodes[i],parent,named);
+		let t = build_element(nodes[i],parent,named,ns);
 		if( t==null ) continue;
 		if( Array.isArray(t) ) {
 			for(let j=0;j<t.length;++j)
@@ -110,10 +110,10 @@ export function build_elements(nodes,parent,named) {
 	return r;
 }
 
-export function build_dom(root){
+export function build_dom(root,ns){
 	let named = {};
 	
-	let elems = build_elements(root.children,null,named);
+	let elems = build_elements(root.children,null,named,ns);
 	
 	let r = elems.length==1 ? elems[0] : elems;
 	if( !('root' in named) )
